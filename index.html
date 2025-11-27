@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IPTV Viewer</title>
+    <title>watchTV forfree</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 </head>
+
 <body>
     <div class="app-container">
         <aside class="sidebar">
             <div class="logo">
-                <h1>📺 IPTV Viewer</h1>
+                <h1>📺 watchTV forfree</h1>
             </div>
-            
+
             <div class="filters">
                 <div class="filter-group">
                     <label for="search">Search</label>
@@ -36,7 +38,7 @@
                         <option value="all">All Categories</option>
                     </select>
                 </div>
-                
+
                 <div class="stats">
                     <small id="channel-count">Loading channels...</small>
                 </div>
@@ -52,7 +54,7 @@
                     <small>This may take a few seconds</small>
                 </div>
             </div>
-            
+
             <div id="pagination" class="pagination">
                 <button id="prev-page" disabled>Previous</button>
                 <span id="page-info">Page 1</span>
@@ -76,4 +78,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>

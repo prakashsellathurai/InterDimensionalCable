@@ -57,12 +57,38 @@ async function init() {
     try {
         await fetchData();
         setupFilters();
+        await detectAndSetRegion();
         setupEventListeners();
         updateFavoritesCount();
         applyFilters();
     } catch (error) {
         console.error('Initialization failed:', error);
         elements.grid.innerHTML = `<div class="loading-state"><p>Error loading data. Please try again later.</p></div>`;
+    }
+}
+
+async function detectAndSetRegion() {
+    try {
+        // Try to get user's country from IP-based geolocation API
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const userCountry = data.country_code;
+
+        if (userCountry) {
+            // Find the region that contains this country
+            const userRegion = state.regions.find(region =>
+                region.countries.includes(userCountry)
+            );
+
+            if (userRegion) {
+                state.filters.region = userRegion.code;
+                elements.regionSelect.value = userRegion.code;
+                console.log(`Auto-detected region: ${userRegion.name} (${userCountry})`);
+            }
+        }
+    } catch (error) {
+        console.log('Could not auto-detect region:', error);
+        // Silently fail - user can manually select region
     }
 }
 

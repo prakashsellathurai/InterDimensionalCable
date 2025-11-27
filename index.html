@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Viewer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h1>📺 IPTV Viewer</h1>
+            </div>
+            
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="search">Search</label>
+                    <input type="text" id="search" placeholder="Search channels...">
+                </div>
+
+                <div class="filter-group">
+                    <label for="region-select">Region</label>
+                    <select id="region-select">
+                        <option value="all">All Regions</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="type-select">Category</label>
+                    <select id="type-select">
+                        <option value="all">All Categories</option>
+                    </select>
+                </div>
+                
+                <div class="stats">
+                    <small id="channel-count">Loading channels...</small>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div id="channel-grid" class="channel-grid">
+                <!-- Channels will be inserted here -->
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading Channel Data...</p>
+                    <small>This may take a few seconds</small>
+                </div>
+            </div>
+            
+            <div id="pagination" class="pagination">
+                <button id="prev-page" disabled>Previous</button>
+                <span id="page-info">Page 1</span>
+                <button id="next-page">Next</button>
+            </div>
+        </main>
+    </div>
+
+    <div id="player-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="video-container">
+                <video id="video-player" controls></video>
+            </div>
+            <div class="channel-info">
+                <h2 id="player-channel-name">Channel Name</h2>
+                <p id="player-channel-meta">Category • Country</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

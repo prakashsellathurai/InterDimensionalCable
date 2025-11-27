@@ -236,24 +236,61 @@ function openPlayer(channel) {
     elements.modalTitle.textContent = channel.name;
     elements.modalMeta.textContent = `${channel.categories?.[0] || 'General'} • ${channel.country}`;
 
-    if (Hls.isSupported()) {
-        if (hls) {
-            hls.destroy();
+    const playStream = (url, retryWithProxy = true) => {
+        if (Hls.isSupported()) {
+            if (hls) {
+                hls.destroy();
+            }
+            hls = new Hls();
+            hls.loadSource(url);
+            hls.attachMedia(elements.video);
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                elements.video.play().catch(e => console.log('Auto-play prevented:', e));
+            });
+
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.log('fatal network error encountered, try to recover');
+                            if (retryWithProxy) {
+                                console.log('Retrying with CORS proxy...');
+                                hls.destroy();
+                                playStream(`https://corsproxy.io/?${encodeURIComponent(channel.streamUrl)}`, false);
+                            } else {
+                                hls.startLoad();
+                            }
+                            break;
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.log('fatal media error encountered, try to recover');
+                            hls.recoverMediaError();
+                            break;
+                        default:
+                            hls.destroy();
+                            break;
+                    }
+                }
+            });
+        } else if (elements.video.canPlayType('application/vnd.apple.mpegurl')) {
+            elements.video.src = url;
+            elements.video.addEventListener('loadedmetadata', () => {
+                elements.video.play().catch(e => console.log('Auto-play prevented:', e));
+            });
+
+            // Native HLS error handling is limited, but we can try to catch generic errors
+            elements.video.onerror = () => {
+                if (retryWithProxy) {
+                    console.log('Native playback failed, retrying with proxy (might not work for native HLS)...');
+                    elements.video.src = `https://corsproxy.io/?${encodeURIComponent(channel.streamUrl)}`;
+                }
+            };
+        } else {
+            alert('Your browser does not support HLS playback.');
         }
-        hls = new Hls();
-        hls.loadSource(channel.streamUrl);
-        hls.attachMedia(elements.video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            elements.video.play().catch(e => console.log('Auto-play prevented:', e));
-        });
-    } else if (elements.video.canPlayType('application/vnd.apple.mpegurl')) {
-        elements.video.src = channel.streamUrl;
-        elements.video.addEventListener('loadedmetadata', () => {
-            elements.video.play().catch(e => console.log('Auto-play prevented:', e));
-        });
-    } else {
-        alert('Your browser does not support HLS playback.');
-    }
+    };
+
+    playStream(channel.streamUrl);
 }
 
 function closePlayer() {

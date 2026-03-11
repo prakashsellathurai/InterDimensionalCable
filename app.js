@@ -39,6 +39,23 @@ const elements = {
 
 let hls = null;
 
+function toPlayableStreamUrl(rawUrl) {
+    if (!rawUrl) return rawUrl;
+
+    try {
+        const streamUrl = new URL(rawUrl, window.location.href);
+        const pageUrl = new URL(window.location.href);
+        const isMixedContent = pageUrl.protocol === 'https:' && streamUrl.protocol === 'http:';
+        if (isMixedContent) {
+            return `https://corsproxy.io/?${encodeURIComponent(streamUrl.toString())}`;
+        }
+    } catch (error) {
+        console.log('Could not parse stream URL, using raw value:', error);
+    }
+
+    return rawUrl;
+}
+
 function getFullscreenElement() {
     return document.fullscreenElement
         || document.webkitFullscreenElement
@@ -224,7 +241,7 @@ function setupEventListeners() {
         if (e.target === elements.modal) closePlayer();
     });
     document.addEventListener('keydown', (e) => {
-        if (e.key.toLowerCase() !== 'f') return;
+        if (typeof e.key !== 'string' || e.key.toLowerCase() !== 'f') return;
         if (elements.modal.classList.contains('hidden')) return;
         if (e.ctrlKey || e.metaKey || e.altKey) return;
 
@@ -413,7 +430,7 @@ function openPlayer(channel) {
         }
     };
 
-    playStream(channel.streamUrl);
+    playStream(toPlayableStreamUrl(channel.streamUrl));
 }
 
 function closePlayer() {

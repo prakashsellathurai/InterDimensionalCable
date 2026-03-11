@@ -30,7 +30,9 @@ const elements = {
     nextBtn: document.getElementById('next-page'),
     pageInfo: document.getElementById('page-info'),
     modal: document.getElementById('player-modal'),
+    modalContent: document.querySelector('.modal-content'),
     video: document.getElementById('video-player'),
+    fullscreenToggle: document.getElementById('fullscreen-toggle'),
     closeModal: document.querySelector('.close-modal'),
     modalTitle: document.getElementById('player-channel-name'),
     modalMeta: document.getElementById('player-channel-meta'),
@@ -38,6 +40,52 @@ const elements = {
 };
 
 let hls = null;
+
+function getFullscreenElement() {
+    return document.fullscreenElement
+        || document.webkitFullscreenElement
+        || document.msFullscreenElement;
+}
+
+function isFullscreenActive() {
+    return Boolean(getFullscreenElement());
+}
+
+function requestFullscreen(target) {
+    if (!target) return Promise.resolve();
+    if (target.requestFullscreen) return target.requestFullscreen();
+    if (target.webkitRequestFullscreen) return target.webkitRequestFullscreen();
+    if (target.msRequestFullscreen) return target.msRequestFullscreen();
+    return Promise.resolve();
+}
+
+function exitFullscreen() {
+    if (document.exitFullscreen) return document.exitFullscreen();
+    if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+    if (document.msExitFullscreen) return document.msExitFullscreen();
+    return Promise.resolve();
+}
+
+function updateFullscreenUi() {
+    const active = isFullscreenActive() && getFullscreenElement() === elements.modalContent;
+    elements.fullscreenToggle.classList.toggle('is-active', active);
+    elements.fullscreenToggle.textContent = active ? '⤢' : '⛶';
+    elements.fullscreenToggle.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+    elements.fullscreenToggle.setAttribute('title', active ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)');
+}
+
+function toggleFullscreen() {
+    if (elements.modal.classList.contains('hidden')) return;
+    const fullscreenElement = getFullscreenElement();
+    if (fullscreenElement === elements.modalContent) {
+        exitFullscreen().catch((error) => console.log('Could not exit fullscreen:', error));
+        return;
+    }
+
+    if (!fullscreenElement) {
+        requestFullscreen(elements.modalContent).catch((error) => console.log('Could not enter fullscreen:', error));
+    }
+}
 
 function toggleFavorite(channelId) {
     if (state.favorites.has(channelId)) {
@@ -214,9 +262,29 @@ function setupEventListeners() {
     });
 
     elements.closeModal.addEventListener('click', closePlayer);
+    elements.fullscreenToggle.addEventListener('click', toggleFullscreen);
     elements.modal.addEventListener('click', (e) => {
         if (e.target === elements.modal) closePlayer();
     });
+    document.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() !== 'f') return;
+        if (elements.modal.classList.contains('hidden')) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        const target = e.target;
+        const tagName = target?.tagName?.toLowerCase();
+        const isEditable = tagName === 'input'
+            || tagName === 'select'
+            || tagName === 'textarea'
+            || target?.isContentEditable;
+        if (isEditable) return;
+
+        e.preventDefault();
+        toggleFullscreen();
+    });
+    document.addEventListener('fullscreenchange', updateFullscreenUi);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenUi);
+    document.addEventListener('MSFullscreenChange', updateFullscreenUi);
 }
 
 function applyFilters() {
@@ -303,6 +371,7 @@ function updatePagination(totalPages) {
 
 function openPlayer(channel) {
     elements.modal.classList.remove('hidden');
+    updateFullscreenUi();
     elements.modalTitle.textContent = channel.name;
     elements.modalMeta.textContent = `${channel.categories?.[0] || 'General'} • ${channel.country} `;
 
@@ -391,6 +460,10 @@ function openPlayer(channel) {
 }
 
 function closePlayer() {
+    if (getFullscreenElement() === elements.modalContent) {
+        exitFullscreen().catch((error) => console.log('Could not exit fullscreen on close:', error));
+    }
+    updateFullscreenUi();
     elements.modal.classList.add('hidden');
     elements.playerLoader.classList.add('hidden');
     elements.video.pause();

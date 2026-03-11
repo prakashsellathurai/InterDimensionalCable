@@ -1,5 +1,3 @@
-const API_BASE = 'https://iptv-org.github.io/api';
-
 const state = {
     channels: [],
     filteredChannels: [],
@@ -148,57 +146,16 @@ async function detectAndSetRegion() {
 }
 
 async function fetchData() {
-    const [channelsRes, streamsRes, regionsRes, categoriesRes, logosRes] = await Promise.all([
-        fetch(`${API_BASE}/channels.json`),
-        fetch(`${API_BASE}/streams.json`),
-        fetch(`${API_BASE}/regions.json`),
-        fetch(`${API_BASE}/categories.json`),
-        fetch(`${API_BASE}/logos.json`)
-    ]);
-
-    const channelsData = await channelsRes.json();
-    const streamsData = await streamsRes.json();
-    const logosData = await logosRes.json();
-    state.regions = await regionsRes.json();
-    state.categories = await categoriesRes.json();
-
-    processData(channelsData, streamsData, logosData);
-}
-
-function processData(channels, streams, logos) {
-    const channelsMap = new Map(channels.map(c => [c.id, c]));
-
-    // Create a map of channel logos, prioritizing horizontal logos for better card display
-    const logosMap = new Map();
-    logos.forEach(logo => {
-        if (!logosMap.has(logo.channel) || logo.tags?.includes('horizontal')) {
-            logosMap.set(logo.channel, logo.url);
-        }
-    });
-
-    const playableChannels = [];
-    const seenChannels = new Set();
-
-    for (const stream of streams) {
-        if (!stream.channel || seenChannels.has(stream.channel) || !stream.url.startsWith('https://')) continue;
-
-        const channel = channelsMap.get(stream.channel);
-        if (channel) {
-            const thumbnail = logosMap.get(stream.channel);
-            playableChannels.push({
-                ...channel,
-                thumbnail: thumbnail || channel.logo, // Use thumbnail from logos API, fallback to channel logo
-                streamUrl: stream.url,
-                streamUserAgent: stream.user_agent,
-                streamReferrer: stream.referrer
-            });
-            seenChannels.add(stream.channel);
-        }
+    const response = await fetch('./data/iptv-data.json', { cache: 'no-store' });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch data/iptv-data.json: ${response.status}`);
     }
 
-    state.channels = playableChannels;
-    state.filteredChannels = playableChannels;
-    state.channels.sort((a, b) => a.name.localeCompare(b.name));
+    const data = await response.json();
+    state.regions = data.regions || [];
+    state.categories = data.categories || [];
+    state.channels = (data.channels || []).sort((a, b) => a.name.localeCompare(b.name));
+    state.filteredChannels = state.channels;
 }
 
 function setupFilters() {

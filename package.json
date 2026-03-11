@@ -4,6 +4,8 @@
   "description": "A simple, static web application to browse and stream IPTV channels directly in your browser. Powered by [iptv-org](https://github.com/iptv-org/iptv).",
   "main": "app.js",
   "scripts": {
+    "preprocess": "node scripts/preprocess-index.js",
+    "build": "npm run preprocess",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

@@ -26,5 +26,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## How to Run Locally
 1. Clone the repository.
-2. Open `index.html` in your browser.
+2. Generate runtime data from `index.m3u`:
+   - `npm run preprocess`
+3. Open `index.html` in your browser.
    - *Note: For best results, run a local server (e.g., `python -m http.server`) to avoid CORS issues.*

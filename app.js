@@ -358,14 +358,31 @@ function updatePagination(totalPages) {
 
 function openPlayer(channel) {
     window.__useProxy = false;
+
+    // Reset player state strictly on open
+    const overlay = document.getElementById('cors-error-overlay');
+    overlay.classList.add('hidden');
+    const h3 = overlay.querySelector('h3');
+    if (h3) h3.textContent = '⚠️ Stream Blocked by CORS';
+    const firstP = overlay.querySelector('p');
+    if (firstP) firstP.textContent = 'Since this app is hosted on GitHub Pages, it relies on your browser to fetch streams directly. The streaming server blocked this request.';
+    const secondP = overlay.querySelectorAll('p')[1];
+    if (secondP) secondP.style.display = 'block';
+    const extLinks = overlay.querySelector('.extension-links');
+    if (extLinks) extLinks.style.display = 'flex';
+
+    elements.video.style.display = 'block';
+
     elements.modal.classList.remove('hidden');
     updateFullscreenUi();
     elements.modalTitle.textContent = channel.name;
     elements.modalMeta.textContent = `${channel.categories?.[0] || 'General'} • ${channel.country} `;
 
+
     const streamCandidates = getPlayableStreamCandidates(channel.streamUrl);
     let streamCandidateIndex = 0;
     const currentStreamUrl = () => streamCandidates[streamCandidateIndex] || channel.streamUrl;
+    let hasSuccessfullyLoaded = false;
 
     const playStream = (url) => {
         if (Hls.isSupported()) {
@@ -402,6 +419,7 @@ function openPlayer(channel) {
             });
 
             elements.video.addEventListener('playing', () => {
+                hasSuccessfullyLoaded = true;
                 elements.playerLoader.classList.add('hidden');
             });
 
@@ -421,8 +439,16 @@ function openPlayer(channel) {
                                 console.log('Retrying with alternate stream URL...');
                                 playStream(currentStreamUrl());
                             } else {
-                                console.log('No alternate stream URL left to try. Showing CORS UI.');
+                                console.log('No alternate stream URL left to try. Showing error UI.');
                                 elements.video.style.display = 'none'; // hide video to show error
+                                elements.playerLoader.classList.add('hidden');
+                                if (hasSuccessfullyLoaded) {
+                                    const overlay = document.getElementById('cors-error-overlay');
+                                    overlay.querySelector('h3').textContent = '⚠️ Stream Offline';
+                                    overlay.querySelector('p').textContent = 'The stream encountered a network error and is no longer available.';
+                                    overlay.querySelectorAll('p')[1].style.display = 'none';
+                                    overlay.querySelector('.extension-links').style.display = 'none';
+                                }
                                 document.getElementById('cors-error-overlay').classList.remove('hidden');
                             }
                             break;
@@ -440,6 +466,7 @@ function openPlayer(channel) {
         } else if (elements.video.canPlayType('application/vnd.apple.mpegurl')) {
             elements.video.src = url;
             elements.video.addEventListener('loadedmetadata', () => {
+                hasSuccessfullyLoaded = true;
                 elements.video.play().catch(e => console.log('Auto-play prevented:', e));
             });
 
@@ -450,6 +477,18 @@ function openPlayer(channel) {
                     elements.video.src = currentStreamUrl();
                 } else {
                     console.log('Native playback failed and no alternate stream URL left to try.');
+                    elements.video.style.display = 'none';
+                    elements.playerLoader.classList.add('hidden');
+                    if (hasSuccessfullyLoaded) {
+                        const overlay = document.getElementById('cors-error-overlay');
+                        overlay.querySelector('h3').textContent = '⚠️ Stream Offline';
+                        overlay.querySelector('p').textContent = 'The stream encountered a network error and is no longer available.';
+                        const p2 = overlay.querySelectorAll('p')[1];
+                        if (p2) p2.style.display = 'none';
+                        const extL = overlay.querySelector('.extension-links');
+                        if (extL) extL.style.display = 'none';
+                    }
+                    document.getElementById('cors-error-overlay').classList.remove('hidden');
                 }
             };
         } else {

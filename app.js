@@ -39,21 +39,34 @@ const elements = {
 
 let hls = null;
 
-function toPlayableStreamUrl(rawUrl) {
-    if (!rawUrl) return rawUrl;
+function getPlayableStreamCandidates(rawUrl) {
+    if (!rawUrl) return [];
+
+    const candidates = [];
+    const addCandidate = (url) => {
+        if (!url) return;
+        if (!candidates.includes(url)) {
+            candidates.push(url);
+        }
+    };
 
     try {
         const streamUrl = new URL(rawUrl, window.location.href);
         const pageUrl = new URL(window.location.href);
         const isMixedContent = pageUrl.protocol === 'https:' && streamUrl.protocol === 'http:';
+
         if (isMixedContent) {
-            return `https://corsproxy.io/?${encodeURIComponent(streamUrl.toString())}`;
+            const httpsVariant = new URL(streamUrl.toString());
+            httpsVariant.protocol = 'https:';
+            addCandidate(httpsVariant.toString());
+            return candidates;
         }
     } catch (error) {
-        console.log('Could not parse stream URL, using raw value:', error);
+        console.log('Could not parse stream URL for candidates, using raw value:', error);
     }
 
-    return rawUrl;
+    addCandidate(rawUrl);
+    return candidates;
 }
 
 function getFullscreenElement() {
@@ -349,7 +362,11 @@ function openPlayer(channel) {
     elements.modalTitle.textContent = channel.name;
     elements.modalMeta.textContent = `${channel.categories?.[0] || 'General'} • ${channel.country} `;
 
-    const playStream = (url, retryWithProxy = true) => {
+    const streamCandidates = getPlayableStreamCandidates(channel.streamUrl);
+    let streamCandidateIndex = 0;
+    const currentStreamUrl = () => streamCandidates[streamCandidateIndex] || channel.streamUrl;
+
+    const playStream = (url) => {
         if (Hls.isSupported()) {
             if (hls) {
                 hls.destroy();
@@ -395,8 +412,15 @@ function openPlayer(channel) {
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log('fatal network error encountered, try to recover');
-                            hls.startLoad();
+                            console.log('fatal network error encountered');
+                            hls.destroy();
+                            if (streamCandidateIndex + 1 < streamCandidates.length) {
+                                streamCandidateIndex += 1;
+                                console.log('Retrying with alternate stream URL...');
+                                playStream(currentStreamUrl());
+                            } else {
+                                console.log('No alternate stream URL left to try.');
+                            }
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
                             console.log('fatal media error encountered, try to recover');
@@ -405,10 +429,6 @@ function openPlayer(channel) {
                         default:
                             console.log('fatal error, cannot recover');
                             hls.destroy();
-                            if (retryWithProxy) {
-                                console.log('Retrying with CORS proxy...');
-                                playStream(`https://corsproxy.io/?${encodeURIComponent(channel.streamUrl)}`, false);
-                            }
                             break;
                     }
                 }
@@ -420,9 +440,12 @@ function openPlayer(channel) {
             });
 
             elements.video.onerror = () => {
-                if (retryWithProxy) {
-                    console.log('Native playback failed, retrying with proxy...');
-                    elements.video.src = `https://corsproxy.io/?${encodeURIComponent(channel.streamUrl)}`;
+                if (streamCandidateIndex + 1 < streamCandidates.length) {
+                    streamCandidateIndex += 1;
+                    console.log('Native playback failed, retrying with alternate stream URL...');
+                    elements.video.src = currentStreamUrl();
+                } else {
+                    console.log('Native playback failed and no alternate stream URL left to try.');
                 }
             };
         } else {
@@ -430,7 +453,7 @@ function openPlayer(channel) {
         }
     };
 
-    playStream(toPlayableStreamUrl(channel.streamUrl));
+    playStream(currentStreamUrl());
 }
 
 function closePlayer() {

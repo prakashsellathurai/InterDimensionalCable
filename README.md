@@ -26,7 +26,13 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## How to Run Locally
 1. Clone the repository.
-2. Generate runtime data from `index.m3u`:
-   - `npm run preprocess`
-3. Open `index.html` in your browser.
-   - *Note: For best results, run a local server (e.g., `python -m http.server`) to avoid CORS issues.*
+2. Install dependencies:
+   - `bun install`
+3. Generate runtime data from `index.m3u`:
+   - `bun run preprocess`
+4. Start local server for testing:
+   - `bun run serve`
+   - Open `http://127.0.0.1:8080`
+
+## Run Tests
+- `bun run test`

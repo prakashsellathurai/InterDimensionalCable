@@ -4,9 +4,11 @@
   "description": "A simple, static web application to browse and stream IPTV channels directly in your browser. Powered by [iptv-org](https://github.com/iptv-org/iptv).",
   "main": "app.js",
   "scripts": {
-    "preprocess": "node scripts/preprocess-index.js",
-    "build": "npm run preprocess",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "preprocess": "bun scripts/preprocess-index.js",
+    "build": "bun run preprocess",
+    "serve": "bunx http-server . -p 8080",
+    "test": "bunx playwright test",
+    "test:ui": "bunx playwright test --ui"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,9 @@
     "url": "https://github.com/prakashsellathurai/watchTvForFree/issues"
   },
   "homepage": "https://github.com/prakashsellathurai/watchTvForFree#readme",
+  "packageManager": "bun@1.2.5",
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.57.0",
+    "http-server": "^14.1.1"
   }
 }

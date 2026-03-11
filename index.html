@@ -71,13 +71,24 @@
 
     <div id="player-modal" class="modal hidden">
         <div class="modal-content">
-            <button id="fullscreen-toggle" class="fullscreen-toggle" aria-label="Enter fullscreen" title="Toggle fullscreen (F)">
+            <button id="fullscreen-toggle" class="fullscreen-toggle" aria-label="Enter fullscreen"
+                title="Toggle fullscreen (F)">
                 ⛶
             </button>
             <span class="close-modal">&times;</span>
             <div class="video-container">
                 <div id="player-loader" class="player-loader hidden">
                     <div class="spinner"></div>
+                </div>
+                <div id="cors-error-overlay" class="cors-error-overlay hidden">
+                    <h3>⚠️ Stream Blocked by CORS</h3>
+                    <p>Since this app is hosted on GitHub Pages, it relies on your browser to fetch streams directly.
+                        The streaming server blocked this request.</p>
+                    <p><strong>Solution:</strong> Install a free browser extension to easily bypass this.</p>
+                    <div class="extension-links">
+                        <a href="https://www.google.com/search?q=allow+cors+extension" target="_blank">Search Google for
+                            "Allow CORS Extension"</a>
+                    </div>
                 </div>
                 <video id="video-player" controls></video>
             </div>

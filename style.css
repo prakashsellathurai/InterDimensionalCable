@@ -660,6 +660,63 @@ select option {
     pointer-events: none;
 }
 
+.cors-error-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #121212;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+    box-sizing: border-box;
+    z-index: 20;
+    border-radius: 8px;
+}
+
+.cors-error-overlay.hidden {
+    display: none;
+}
+
+.cors-error-overlay h3 {
+    color: #ef4444;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.cors-error-overlay p {
+    margin-bottom: 1rem;
+    max-width: 500px;
+    line-height: 1.5;
+    color: #a0a0a0;
+}
+
+.extension-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.extension-links a {
+    display: inline-block;
+    padding: 0.75rem 1.25rem;
+    background-color: #2563eb;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.extension-links a:hover {
+    background-color: #1d4ed8;
+}
+
 video {
     width: 100%;
     height: 100%;

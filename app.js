@@ -357,6 +357,7 @@ function updatePagination(totalPages) {
 }
 
 function openPlayer(channel) {
+    window.__useProxy = false;
     elements.modal.classList.remove('hidden');
     updateFullscreenUi();
     elements.modalTitle.textContent = channel.name;
@@ -412,14 +413,17 @@ function openPlayer(channel) {
                 if (data.fatal) {
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log('fatal network error encountered');
+                            console.log('fatal network error encountered', data);
                             hls.destroy();
+
                             if (streamCandidateIndex + 1 < streamCandidates.length) {
                                 streamCandidateIndex += 1;
                                 console.log('Retrying with alternate stream URL...');
                                 playStream(currentStreamUrl());
                             } else {
-                                console.log('No alternate stream URL left to try.');
+                                console.log('No alternate stream URL left to try. Showing CORS UI.');
+                                elements.video.style.display = 'none'; // hide video to show error
+                                document.getElementById('cors-error-overlay').classList.remove('hidden');
                             }
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
@@ -457,12 +461,15 @@ function openPlayer(channel) {
 }
 
 function closePlayer() {
+    window.__useProxy = false; // Note: you can completely delete this, but harmless
     if (getFullscreenElement() === elements.modalContent) {
         exitFullscreen().catch((error) => console.log('Could not exit fullscreen on close:', error));
     }
     updateFullscreenUi();
     elements.modal.classList.add('hidden');
     elements.playerLoader.classList.add('hidden');
+    document.getElementById('cors-error-overlay').classList.add('hidden');
+    elements.video.style.display = 'block';
     elements.video.pause();
     elements.video.src = '';
     if (hls) {

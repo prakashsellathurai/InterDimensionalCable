@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
 test.describe('Mixed content handling', () => {
-    test('rewrites http stream URLs to https proxy before hls load', async ({ page }) => {
+    test('keeps http stream URL when app is served over http', async ({ page }) => {
         const testChannel = {
             id: 'test-http-channel',
             name: 'HTTP Channel',
@@ -26,7 +26,10 @@ test.describe('Mixed content handling', () => {
             });
         });
 
-        await page.addInitScript(() => {
+        await page.goto('/');
+        await expect(page.locator('.channel-card')).toHaveCount(1);
+
+        await page.evaluate(() => {
             class MockHls {
                 static isSupported() { return true; }
                 static Events = {
@@ -64,14 +67,11 @@ test.describe('Mixed content handling', () => {
             window.Hls = MockHls;
         });
 
-        await page.goto('/');
-        await expect(page.locator('.channel-card')).toHaveCount(1);
+        await page.locator('.channel-card .channel-name').first().click();
+        await expect(page.locator('#player-modal')).toBeVisible();
 
-        await page.locator('.channel-card').first().click();
-
-        const loadedSource = await page.evaluate(() => window.__lastLoadedHlsSource);
-        expect(loadedSource).toBe(
-            'https://corsproxy.io/?http%3A%2F%2Fiptvcasomsapi.jprdigital.in%2Fx-media%2FC0575%2Fmaster.m3u8'
+        await expect.poll(async () => page.evaluate(() => window.__lastLoadedHlsSource)).toBe(
+            'http://iptvcasomsapi.jprdigital.in/x-media/C0575/master.m3u8'
         );
     });
 });

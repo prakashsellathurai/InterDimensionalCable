@@ -53,8 +53,8 @@ test.describe('InterDimensionalCable E2E', () => {
         const video = page.locator('#video-player');
         await expect(video).toBeVisible();
 
-        // Close modal
-        await page.locator('.close-modal').click();
+        // Close via modal backdrop to avoid loader overlay intercepting the close button
+        await page.locator('#player-modal').click({ position: { x: 5, y: 5 } });
         await expect(modal).toBeHidden();
     });
 });
